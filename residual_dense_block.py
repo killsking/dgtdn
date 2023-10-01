@@ -33,54 +33,7 @@ class ConvBlock(nn.Module):
 
         
 
-class WAVSRDB(nn.Module):
-    def __init__(self, in_channels, num_dense_layer, growth_rate):
-        """
 
-        :param in_channels: input channel size
-        :param num_dense_layer: the number of RDB layers
-        :param growth_rate: growth_rate
-        """
-        super(WAVSRDB, self).__init__()
-        
-        modules = []
-        self.haarwav=HaarTransform(in_channels)
-        self.haarinwav=InverseHaarTransform(in_channels)
-        self.split_channel=in_channels
-        kernel_size=3
-        dilation=1
-        self.conv1 = nn.Conv2d(self.split_channel*1, self.split_channel, kernel_size=kernel_size, padding=dilation, dilation=dilation)
-        dilation=2
-        self.conv2 = nn.Conv2d(self.split_channel*2, self.split_channel, kernel_size=kernel_size, padding=dilation, dilation=dilation)
-        dilation=2
-        self.conv3 = nn.Conv2d(self.split_channel*3, self.split_channel, kernel_size=kernel_size,  padding=dilation, dilation=dilation)
-        dilation=1
-        self.conv4 = nn.Conv2d(self.split_channel*4, self.split_channel, kernel_size=kernel_size, padding=dilation, dilation=dilation)
-
-            
-        #self.residual_dense_layers = nn.Sequential(*modules)
-        _in_channels=in_channels
-        self.calayer=CALayer(in_channels)
-        self.palayer=PALayer(in_channels)
-        self.conv_1x1 = nn.Conv2d(_in_channels*4, in_channels, kernel_size=1, padding=0)
-
-    def forward(self, x):
-        ll,  lh, hl, hh = self.haarwav(x)
-        x0=F.relu(self.conv1(ll))
-        tmp= torch.cat((lh, x0), 1)
-        x1=F.relu(self.conv2(tmp))
-        tmp= torch.cat((hl, x0, x1), 1)
-        x2=F.relu(self.conv3(tmp))
-        tmp= torch.cat((hh, x0, x1, x2), 1)
-        x3=F.relu(self.conv4(tmp))
-        tmp= torch.cat(( x0, x1, x2, x3), 1)
-        
-        out = self.haarinwav(tmp)
-        out=self.calayer(out)
-        out=self.palayer(out)
-        out=out+x
-        return out
-                
 
 
         
